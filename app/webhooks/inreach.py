@@ -64,7 +64,6 @@ class InreachEvent(BaseModel):
     addresses: List[InreachEventAddress]
     point: InreachEventPoint
     status: InreachEventStatus
-
     integration_id: Optional[str]
     owner: Optional[str]
 
