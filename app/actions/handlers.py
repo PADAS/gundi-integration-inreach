@@ -35,9 +35,9 @@ async def action_push_messages(integration: Integration, action_config: PushMess
     auth_config = integration.get_action_config("auth")
     inreach_username = auth_config.data.get("username")
     inreach_password = auth_config.data.get("password")
-    await inreach_client.send_messages(
+    inreach_response = await inreach_client.send_messages(
         ipc_messages=[ipc_message],
         username=inreach_username,
         password=inreach_password,
     )
-    return {"status": "success"}
+    return {"status": "success", "inreach_response": inreach_response}
