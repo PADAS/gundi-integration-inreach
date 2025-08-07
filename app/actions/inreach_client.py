@@ -1,5 +1,6 @@
+import os
 from typing import List, Optional
-
+from urllib.parse import urljoin
 import httpx
 from gundi_core.schemas.v2 import InReachIPCMessage
 
@@ -21,19 +22,20 @@ class InReachInternalError(InReachClientError):
 
 
 class InReachClient:
+    DEFAULT_API_URL = os.getenv("INREACH_API_URL", "https://eur-enterprise.inreach.garmin.com")
     DEFAULT_CONNECT_TIMEOUT_SECONDS = 10
     DEFAULT_DATA_TIMEOUT_SECONDS = 60
 
     def __init__(
             self,
-            api_url: str = "https://eur-enterprise.inreach.garmin.com",
+            api_url: Optional[str] = None,
             connect_timeout: float = DEFAULT_CONNECT_TIMEOUT_SECONDS,
             data_timeout: float = DEFAULT_DATA_TIMEOUT_SECONDS,
             username: Optional[str] = None, password: Optional[str] = None,
     ):
         self.username = username
         self.password = password
-        self.api_url = api_url
+        self.api_url = api_url or self.DEFAULT_API_URL
         self.connect_timeout = connect_timeout
         self.data_timeout = data_timeout
         session_kwargs = {
@@ -58,7 +60,7 @@ class InReachClient:
         """
         Make an API call to the InReach service.
         """
-        url = f"{self.api_url}/{endpoint}"
+        url = urljoin(self.api_url, endpoint.lstrip("/"))
         extra = {}
         if (username := kwargs.get("username")) and (password := kwargs.get("password")):
             extra["auth"] = (username, password)
@@ -70,7 +72,10 @@ class InReachClient:
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             response.raise_for_status()
-            return response.json()
+            try:
+                return response.json()
+            except ValueError:
+                raise InReachClientError(f"Non-JSON response: {response.text}")
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 403:
                 raise InReachBadCredentials("Invalid username or password.")
@@ -100,9 +105,10 @@ class InReachClient:
         """
         Send messages to the InReach service.
         """
+        messages = [msg.dict() for msg in ipc_messages]
         return await self._call_api(
             endpoint="IPCInbound/V1/Messaging.svc/Message",
             method="POST",
-            data={"Messages": ipc_messages},
+            data={"Messages": messages},
             username=username, password=password
         )
