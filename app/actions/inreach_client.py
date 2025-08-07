@@ -1,3 +1,4 @@
+import json
 import os
 from typing import List, Optional
 from urllib.parse import urljoin
@@ -62,13 +63,20 @@ class InReachClient:
         """
         url = urljoin(self.api_url, endpoint.lstrip("/"))
         extra = {}
-        if (username := kwargs.get("username")) and (password := kwargs.get("password")):
+        if (username := kwargs.pop("username", None)) and (password := kwargs.pop("password", None)):
             extra["auth"] = (username, password)
+        extra |= kwargs
         try:
             if method == "GET":
                 response = await self.session.get(url, **extra)
             elif method == "POST":
-                response = await self.session.post(url, json=data, **extra)
+                data = data or {}
+                json_data = json.dumps(data, default=str)
+                response = await self.session.post(
+                    url,
+                    json=json_data,
+                    **extra
+                )
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             response.raise_for_status()
@@ -92,7 +100,7 @@ class InReachClient:
 
     async def pingback(self, username: str = None, password: str = None):
         """
-        Test the connection to the InReach API.
+        Test the connection to the InReach API with the given credentials.
         """
         return await self._call_api(
             endpoint="IPCInbound/V1/Pingback.svc/PingbackRequest",
