@@ -7,7 +7,10 @@ from gundi_core.schemas.v2 import InReachIPCMessage
 
 
 class InReachClientError(Exception):
-    pass
+    # Optional support for storing the api response
+    def __init__(self, message=None, response=None):
+        super().__init__(message)
+        self.response = response
 
 
 class InReachBadCredentials(InReachClientError):
@@ -83,16 +86,16 @@ class InReachClient:
             try:
                 return response.json()
             except ValueError:
-                raise InReachClientError(f"Non-JSON response: {response.text}")
+                raise InReachClientError(f"Non-JSON response: {response.status_code} {response.text}")
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 403:
-                raise InReachBadCredentials("Invalid username or password.")
+                raise InReachBadCredentials("Invalid username or password.", response=e.response)
             elif e.response.status_code in [502, 503, 504]:
-                raise InReachServiceUnreachable("InReach service is currently unavailable.")
+                raise InReachServiceUnreachable("InReach service is currently unavailable.", response=e.response)
             elif e.response.status_code == 500:
-                raise InReachInternalError("Internal server error from InReach service.")
+                raise InReachInternalError("Internal server error from InReach service.", response=e.response)
             else:
-                raise InReachClientError(f"Bad status: {e.response.status_code}, {e.response.text}")
+                raise InReachClientError(f"Bad status: {e.response.status_code}, {e.response.text}", response=e.response)
         except httpx.RequestError as e:
             raise InReachServiceUnreachable(f"Failed to connect to InReach service: {type(e).__name__}: {str(e)}")
         except Exception as e:
