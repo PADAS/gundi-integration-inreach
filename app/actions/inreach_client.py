@@ -74,10 +74,10 @@ class InReachClient:
                 response = await self.session.get(url, **extra)
             elif method == "POST":
                 data = data or {}
-                json_data = json.dumps(data, default=str)
+                clean_data = json.loads(json.dumps(data, default=str))  # Convert to JSON serializable
                 response = await self.session.post(
                     url,
-                    json=json_data,
+                    json=clean_data,
                     **extra
                 )
             else:
