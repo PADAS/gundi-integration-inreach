@@ -29,12 +29,16 @@ async def action_auth(integration: Integration, action_config: AuthenticateConfi
 
 
 @activity_logger()
-async def action_push_messages(integration: Integration, action_config: PushMessageConfig,
-                               data: MessageTransformedInReach):
+async def action_push_messages(
+        integration: Integration, action_config: PushMessageConfig, data: MessageTransformedInReach
+):
     ipc_message = data.payload
     auth_config = integration.get_action_config("auth")
-    inreach_username = auth_config.data.get("username")
-    inreach_password = auth_config.data.get("password")
+    if not auth_config:
+        raise ValueError("Authentication configuration is required for sending messages.")
+    parsed_auth_config = AuthenticateConfig.parse_obj(auth_config.data)
+    inreach_username = parsed_auth_config.username
+    inreach_password = parsed_auth_config.password.get_secret_value()
     inreach_response = await inreach_client.send_messages(
         ipc_messages=[ipc_message],
         username=inreach_username,
