@@ -83,6 +83,8 @@ class InReachClient:
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             response.raise_for_status()
+            if not response.text:
+                return {}
             try:
                 return response.json()
             except ValueError:
