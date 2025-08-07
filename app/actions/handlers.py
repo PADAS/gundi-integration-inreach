@@ -4,7 +4,7 @@ from gundi_core.events.transformers import MessageTransformedInReach
 from app.services.activity_logger import activity_logger
 from app import settings
 from .configurations import AuthenticateConfig, PushMessageConfig
-from .inreach_client import InReachClient, InReachBadCredentials
+from .inreach_client import InReachClient, InReachAuthenticationError
 
 inreach_client = InReachClient(api_url=settings.INREACH_API_URL)
 
@@ -17,8 +17,8 @@ async def action_auth(integration: Integration, action_config: AuthenticateConfi
             username=inreach_username,
             password=inreach_password,
         )
-    except InReachBadCredentials:
-        return {"valid_credentials": False, "error": "Invalid username or password."}
+    except InReachAuthenticationError as e:
+        return {"valid_credentials": False, "error": str(e)}
     except Exception as e:
         return {"valid_credentials": False, "error": f"Error in authentication test: {type(e).__name__}: {e}."}
     else:
