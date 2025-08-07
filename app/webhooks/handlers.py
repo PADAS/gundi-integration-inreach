@@ -5,9 +5,10 @@ from gundi_client_v2 import GundiDataSenderClient
 from app.services.activity_logger import webhook_activity_logger
 from app.services.gundi import send_observations_to_gundi, _get_gundi_api_key
 from .configurations import InReachWebhookPayload, InReachWebhookConfig
+from .inreach import InreachEvent
 
 
-def build_message_from_inreach_event(inreach_event):
+def build_message_from_inreach_event(inreach_event: InreachEvent):
     location_data = inreach_event.point.dict()
     latitude = location_data.pop("latitude")
     longitude = location_data.pop("longitude")
@@ -15,7 +16,7 @@ def build_message_from_inreach_event(inreach_event):
         "sender": inreach_event.imei,
         "recipients": [],
         "text": inreach_event.freeText,
-        "recorded_at": inreach_event.timestamp.isoformat(),
+        "recorded_at": inreach_event.timeStamp.isoformat(),
         "location": {
             "latitude": latitude,
             "longitude": longitude,
@@ -31,7 +32,7 @@ def build_message_from_inreach_event(inreach_event):
     }
 
 
-def build_observation_from_inreach_event(inreach_event):
+def build_observation_from_inreach_event(inreach_event: InreachEvent):
     location_data = inreach_event.point.dict()
     latitude = location_data.pop("latitude")
     longitude = location_data.pop("longitude")
@@ -40,7 +41,7 @@ def build_observation_from_inreach_event(inreach_event):
         "type": "gps-radio",
         "subject_type": "ranger",
         "source_name": inreach_event.imei,
-        "recorded_at": "2025-06-05 18:28:10-0300",
+        "recorded_at": inreach_event.timeStamp,
         "location": {
             "lat": latitude,
             "lon": longitude
