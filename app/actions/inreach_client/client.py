@@ -45,6 +45,9 @@ class InReachClient:
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.close()
+
+    async def close(self):
         await self.session.aclose()
 
     async def _call_api(self, endpoint: str, method: str = "GET", data: dict = None, **kwargs):
@@ -53,8 +56,12 @@ class InReachClient:
         """
         url = urljoin(self.api_url, endpoint.lstrip("/"))
         extra = {}
-        if (username := kwargs.pop("username", None)) and (password := kwargs.pop("password", None)):
+        username = kwargs.pop("username", None)
+        password = kwargs.pop("password", None)
+        if username and password:
             extra["auth"] = (username, password)
+        elif not self.session.auth:
+            raise InReachAuthenticationError("No authentication credentials provided.")
         extra |= kwargs
         try:
             if method == "GET":

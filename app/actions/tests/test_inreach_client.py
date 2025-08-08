@@ -27,7 +27,22 @@ from ..inreach_client import (
 
 
 @pytest.mark.asyncio
-async def test_inreach_client_pingback_success():
+async def test_inreach_client_as_instance_pingback_success():
+    async with respx.mock(assert_all_called=True) as mock:
+        mock.post("/IPCInbound/V1/Pingback.svc/PingbackRequest").respond(
+            status_code=httpx.codes.OK,
+            text=""
+        )
+
+        client = InReachClient()
+        response = await client.pingback(username="test_user", password="test_pass")
+        await client.close()
+
+        assert response == {}
+
+
+@pytest.mark.asyncio
+async def test_inreach_client_as_ctx_mgr_pingback_success():
     async with respx.mock(assert_all_called=True) as mock:
         mock.post("/IPCInbound/V1/Pingback.svc/PingbackRequest").respond(
             status_code=httpx.codes.OK,
@@ -37,6 +52,53 @@ async def test_inreach_client_pingback_success():
         async with InReachClient() as client:
             response = await client.pingback(username="test_user", password="test_pass")
             assert response == {}
+
+
+@pytest.mark.asyncio
+async def test_inreach_client_pingback_with_credentials_on_init():
+    async with respx.mock(assert_all_called=True) as mock:
+        mock.post("/IPCInbound/V1/Pingback.svc/PingbackRequest").respond(
+            status_code=httpx.codes.OK,
+            text=""
+        )
+
+        client = InReachClient(username="test_user", password="test_pass")
+        response = await client.pingback()
+        await client.close()
+
+        assert response == {}
+
+
+@pytest.mark.asyncio
+async def test_inreach_client_send_messages_success(inreach_ipc_message):
+    async with respx.mock(assert_all_called=True) as mock:
+        mock.post("/IPCInbound/V1/Messaging.svc/Message").respond(
+            status_code=httpx.codes.OK,
+            json={}  # Don't know the exact response schema
+        )
+
+        async with InReachClient() as client:
+            response = await client.send_messages(
+                ipc_messages=[inreach_ipc_message],
+                username="test_user",
+                password="test_pass"
+            )
+            assert response == {}
+
+
+@pytest.mark.asyncio
+async def test_inreach_client_send_messages_with_credentials_on_init(inreach_ipc_message):
+    async with respx.mock(assert_all_called=True) as mock:
+        mock.post("/IPCInbound/V1/Messaging.svc/Message").respond(
+            status_code=httpx.codes.OK,
+            json={}
+        )
+
+        client = InReachClient(username="test_user", password="test_pass")
+        response = await client.send_messages(ipc_messages=[inreach_ipc_message])
+        await client.close()
+
+        assert response == {}
 
 
 @pytest.mark.asyncio
@@ -146,19 +208,5 @@ async def test_inreach_client_pingback_internal_error_text_response():
             assert error.response.status_code == httpx.codes.INTERNAL_SERVER_ERROR
 
 
-@pytest.mark.asyncio
-async def test_inreach_client_send_messages_success(inreach_ipc_message):
-    async with respx.mock(assert_all_called=True) as mock:
-        mock.post("/IPCInbound/V1/Messaging.svc/Message").respond(
-            status_code=httpx.codes.OK,
-            json={}  # Don't know the exact response schema
-        )
 
-        async with InReachClient() as client:
-            response = await client.send_messages(
-                ipc_messages=[inreach_ipc_message],
-                username="test_user",
-                password="test_pass"
-            )
-            assert response == {}
 
