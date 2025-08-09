@@ -12,7 +12,7 @@ def build_message_from_inreach_event(inreach_event: InreachEvent):
         "sender": inreach_event.imei,
         "recipients": [],
         "text": inreach_event.freeText,
-        "recorded_at": inreach_event.timeStamp.isoformat(),
+        "recorded_at": inreach_event.timeStamp,
         "location": {
             "latitude": latitude,
             "longitude": longitude,

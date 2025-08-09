@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock
 
 import pytest
-import asyncio
 import datetime
 from gundi_core.schemas.v2.inreach import InReachIPCMessage
 from gundi_core.schemas.v2 import Integration, IntegrationSummary
