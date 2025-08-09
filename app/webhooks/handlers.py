@@ -55,11 +55,10 @@ def build_observation_from_inreach_event(inreach_event: InreachEvent):
 
 @webhook_activity_logger()
 async def webhook_handler(payload: InReachWebhookPayload, integration=None, webhook_config: InReachWebhookConfig = None):
-    inreach_event_payload = json.loads(payload.json())
     observations = []
     messages = []
     # Extract observations and messages
-    for inreach_event in inreach_event_payload.Events:
+    for inreach_event in payload.Events:
         if webhook_config.include_messages:
             messages.append(build_message_from_inreach_event(inreach_event))
         if webhook_config.include_observations:
