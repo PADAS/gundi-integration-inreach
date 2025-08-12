@@ -13,7 +13,7 @@ from .errors import (
 
 
 class InReachClient:
-    DEFAULT_API_URL = os.getenv("INREACH_API_URL", "https://eur-enterprise.inreach.garmin.com")
+    DEFAULT_API_URL = os.getenv("INREACH_API_URL", "https://explore.garmin.com")
     DEFAULT_CONNECT_TIMEOUT_SECONDS = 10
     DEFAULT_DATA_TIMEOUT_SECONDS = 60
 
