@@ -163,7 +163,14 @@ def mock_inreach_client(mocker):
     mock_inreach_client.send_messages = AsyncMock(
         return_value={"status": "success", "inreach_response": {"Detail": "Message sent successfully."}}
     )
+    mock_inreach_client.__aenter__.return_value = mock_inreach_client
     return mock_inreach_client
+
+@pytest.fixture
+def mock_inreach_client_class(mocker, mock_inreach_client):
+    mock_inreach_client_class = mocker.MagicMock()
+    mock_inreach_client_class.return_value = mock_inreach_client
+    return mock_inreach_client_class
 
 
 @pytest.fixture

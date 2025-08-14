@@ -10,7 +10,7 @@ from app.services.action_runner import execute_action
 
 @pytest.mark.asyncio
 async def test_execute_auth_valid_credentials(
-        mocker, inreach_integration, mock_inreach_client, mock_config_manager_inreach,
+        mocker, inreach_integration, mock_inreach_client_class, mock_config_manager_inreach,
         mock_gundi_client_v2_inreach, mock_gundi_client_v2_class_inreach,
         mock_get_gundi_api_key, mock_gundi_sensors_client_class, mock_publish_event,
 ):
@@ -18,7 +18,7 @@ async def test_execute_auth_valid_credentials(
     mocker.patch("app.services.activity_logger.publish_event", mock_publish_event)
     mocker.patch("app.services.action_runner.publish_event", mock_publish_event)
     mocker.patch("app.services.action_runner.config_manager", mock_config_manager_inreach)
-    mocker.patch("app.actions.handlers.inreach_client", mock_inreach_client)
+    mocker.patch("app.actions.handlers.InReachClient", mock_inreach_client_class)
     mocker.patch("app.services.gundi.GundiClient", mock_gundi_client_v2_class_inreach)
     mocker.patch("app.services.gundi.GundiDataSenderClient", mock_gundi_sensors_client_class)
     mocker.patch("app.services.gundi._get_gundi_api_key", mock_get_gundi_api_key)
@@ -38,18 +38,18 @@ async def test_execute_auth_valid_credentials(
 
 @pytest.mark.asyncio
 async def test_execute_auth_bad_credentials(
-        mocker, inreach_integration, mock_inreach_client, mock_config_manager_inreach,
+        mocker, inreach_integration, mock_inreach_client_class, mock_config_manager_inreach,
         mock_gundi_client_v2_inreach, mock_gundi_client_v2_class_inreach,
         mock_get_gundi_api_key, mock_gundi_sensors_client_class, mock_publish_event,
 ):
-    mock_inreach_client.pingback = mock.AsyncMock(
+    mock_inreach_client_class.return_value.pingback = mock.AsyncMock(
         side_effect=InReachAuthenticationError()
     )
     mocker.patch("app.services.action_runner._portal", mock_gundi_client_v2_inreach)
     mocker.patch("app.services.activity_logger.publish_event", mock_publish_event)
     mocker.patch("app.services.action_runner.publish_event", mock_publish_event)
     mocker.patch("app.services.action_runner.config_manager", mock_config_manager_inreach)
-    mocker.patch("app.actions.handlers.inreach_client", mock_inreach_client)
+    mocker.patch("app.actions.handlers.InReachClient", mock_inreach_client_class)
     mocker.patch("app.services.gundi.GundiClient", mock_gundi_client_v2_class_inreach)
     mocker.patch("app.services.gundi.GundiDataSenderClient", mock_gundi_sensors_client_class)
     mocker.patch("app.services.gundi._get_gundi_api_key", mock_get_gundi_api_key)
@@ -69,18 +69,18 @@ async def test_execute_auth_bad_credentials(
 
 @pytest.mark.asyncio
 async def test_execute_auth_with_inreach_error(
-        mocker, inreach_integration, mock_inreach_client, mock_config_manager_inreach,
+        mocker, inreach_integration, mock_inreach_client_class, mock_config_manager_inreach,
         mock_gundi_client_v2_inreach, mock_gundi_client_v2_class_inreach,
         mock_get_gundi_api_key, mock_gundi_sensors_client_class, mock_publish_event,
 ):
-    mock_inreach_client.pingback = mock.AsyncMock(
+    mock_inreach_client_class.return_value.pingback = mock.AsyncMock(
         side_effect=InReachServiceUnreachable()
     )
     mocker.patch("app.services.action_runner._portal", mock_gundi_client_v2_inreach)
     mocker.patch("app.services.activity_logger.publish_event", mock_publish_event)
     mocker.patch("app.services.action_runner.publish_event", mock_publish_event)
     mocker.patch("app.services.action_runner.config_manager", mock_config_manager_inreach)
-    mocker.patch("app.actions.handlers.inreach_client", mock_inreach_client)
+    mocker.patch("app.actions.handlers.InReachClient", mock_inreach_client_class)
     mocker.patch("app.services.gundi.GundiClient", mock_gundi_client_v2_class_inreach)
     mocker.patch("app.services.gundi.GundiDataSenderClient", mock_gundi_sensors_client_class)
     mocker.patch("app.services.gundi._get_gundi_api_key", mock_get_gundi_api_key)
@@ -104,7 +104,7 @@ async def test_execute_auth_with_inreach_error(
 
 @pytest.mark.asyncio
 async def test_execute_push_messages_success(
-        mocker, inreach_integration, mock_inreach_client, mock_config_manager_inreach,
+        mocker, inreach_integration, mock_inreach_client_class, mock_config_manager_inreach,
         mock_gundi_client_v2_inreach, mock_gundi_client_v2_class_inreach,
         mock_get_gundi_api_key, mock_gundi_sensors_client_class, mock_publish_event,
         mock_push_messages_data
@@ -113,7 +113,7 @@ async def test_execute_push_messages_success(
     mocker.patch("app.services.activity_logger.publish_event", mock_publish_event)
     mocker.patch("app.services.action_runner.publish_event", mock_publish_event)
     mocker.patch("app.services.action_runner.config_manager", mock_config_manager_inreach)
-    mocker.patch("app.actions.handlers.inreach_client", mock_inreach_client)
+    mocker.patch("app.actions.handlers.InReachClient", mock_inreach_client_class)
     mocker.patch("app.services.gundi.GundiClient", mock_gundi_client_v2_class_inreach)
     mocker.patch("app.services.gundi.GundiDataSenderClient", mock_gundi_sensors_client_class)
     mocker.patch("app.services.gundi._get_gundi_api_key", mock_get_gundi_api_key)
@@ -130,19 +130,19 @@ async def test_execute_push_messages_success(
 
 @pytest.mark.asyncio
 async def test_execute_push_messages_with_inreach_error(
-        mocker, inreach_integration, mock_inreach_client, mock_config_manager_inreach,
+        mocker, inreach_integration, mock_inreach_client_class, mock_config_manager_inreach,
         mock_gundi_client_v2_inreach, mock_gundi_client_v2_class_inreach,
         mock_get_gundi_api_key, mock_gundi_sensors_client_class, mock_publish_event,
         mock_push_messages_data
 ):
-    mock_inreach_client.send_messages = mock.AsyncMock(
+    mock_inreach_client_class.return_value.send_messages = mock.AsyncMock(
         side_effect=InReachInternalError()
     )
     mocker.patch("app.services.action_runner._portal", mock_gundi_client_v2_inreach)
     mocker.patch("app.services.activity_logger.publish_event", mock_publish_event)
     mocker.patch("app.services.action_runner.publish_event", mock_publish_event)
     mocker.patch("app.services.action_runner.config_manager", mock_config_manager_inreach)
-    mocker.patch("app.actions.handlers.inreach_client", mock_inreach_client)
+    mocker.patch("app.actions.handlers.InReachClient", mock_inreach_client_class)
     mocker.patch("app.services.gundi.GundiClient", mock_gundi_client_v2_class_inreach)
     mocker.patch("app.services.gundi.GundiDataSenderClient", mock_gundi_sensors_client_class)
     mocker.patch("app.services.gundi._get_gundi_api_key", mock_get_gundi_api_key)
