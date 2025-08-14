@@ -229,3 +229,20 @@ def mock_push_messages_data():
         },
         "event_type": "MessageTransformedInReach"
     }
+
+
+@pytest.fixture
+def mock_push_messages_metadata(inreach_integration):
+    return {
+        "gundi_version": "v2",
+        "provider_key": "awt",
+        "gundi_id": "23ca4b15-18b6-4cf4-9da6-36dd69c6f638",
+        "related_to": "None",
+        "stream_type": "txt",
+        "source_id": "afa0d606-c143-4705-955d-68133645db6d",
+        "external_source_id": "Xyz123",
+        "destination_id": str(inreach_integration.id),
+        "data_provider_id": "ddd0946d-15b0-4308-b93d-e0470b6d33b6",
+        "annotations": "{}",
+        "tracing_context": "{}"
+    }

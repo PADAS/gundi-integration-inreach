@@ -107,7 +107,7 @@ async def test_execute_push_messages_success(
         mocker, inreach_integration, mock_inreach_client_class, mock_config_manager_inreach,
         mock_gundi_client_v2_inreach, mock_gundi_client_v2_class_inreach,
         mock_get_gundi_api_key, mock_gundi_sensors_client_class, mock_publish_event,
-        mock_push_messages_data
+        mock_push_messages_data, mock_push_messages_metadata
 ):
     mocker.patch("app.services.action_runner._portal", mock_gundi_client_v2_inreach)
     mocker.patch("app.services.activity_logger.publish_event", mock_publish_event)
@@ -122,7 +122,8 @@ async def test_execute_push_messages_success(
     response = await execute_action(
         integration_id=integration_id,
         action_id="push_messages",
-        data=mock_push_messages_data
+        data=mock_push_messages_data,
+        metadata=mock_push_messages_metadata
     )
 
     assert response.get("status") == "success"
@@ -133,7 +134,7 @@ async def test_execute_push_messages_with_inreach_error(
         mocker, inreach_integration, mock_inreach_client_class, mock_config_manager_inreach,
         mock_gundi_client_v2_inreach, mock_gundi_client_v2_class_inreach,
         mock_get_gundi_api_key, mock_gundi_sensors_client_class, mock_publish_event,
-        mock_push_messages_data
+        mock_push_messages_data, mock_push_messages_metadata
 ):
     mock_inreach_client_class.return_value.send_messages = mock.AsyncMock(
         side_effect=InReachInternalError()
@@ -151,7 +152,8 @@ async def test_execute_push_messages_with_inreach_error(
     response = await execute_action(
         integration_id=integration_id,
         action_id="push_messages",
-        data=mock_push_messages_data
+        data=mock_push_messages_data,
+        metadata=mock_push_messages_metadata
     )
 
     # Check that returns an 500 so that it can be retried by GCP
