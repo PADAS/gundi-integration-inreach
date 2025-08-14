@@ -41,7 +41,7 @@ async def action_push_messages(
         integration: Integration, action_config: PushMessageConfig, data: MessageTransformedInReach, metadata: dict
 ):
     # Trace messages with Open Telemetry
-    tracing.pubsub_instrumentation.load_context_from_attributes(metadata)
+    tracing.instrumentation_utils.load_context_from_metadata(metadata)
     with tracing.tracer.start_as_current_span(
             "inreach_connector.action_push_messages", kind=SpanKind.CLIENT
     ) as current_span:

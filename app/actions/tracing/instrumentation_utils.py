@@ -3,9 +3,9 @@ import json
 from opentelemetry import propagate, context
 
 
-def load_context_from_attributes(attributes=None):
-    attributes = attributes or {}
-    carrier = json.loads(attributes.get("tracing_context", "{}"))
+def load_context_from_metadata(metadata=None):
+    metadata = metadata or {}
+    carrier = json.loads(metadata.get("tracing_context", "{}"))
     ctx = propagate.extract(carrier=carrier)
     context.attach(ctx)
 
