@@ -5,9 +5,9 @@ from app.services.utils import GlobalUISchemaOptions
 
 class AuthenticateConfig(AuthActionConfiguration, ExecutableActionMixin):
     api_url: str = Field(
-        default="https://explore.garmin.com",
-        title="API URL",
-        description="Base URL for inReach API"
+        ...,
+        title="inReach Portal Connect (IPC) Inbound API",
+        description="Base URL for inReach Inbound API"
     )
     username: str = Field(
         ...,

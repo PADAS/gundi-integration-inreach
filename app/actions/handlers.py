@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 async def action_auth(integration: Integration, action_config: AuthenticateConfig):
-    inreach_api_url = integration.base_url or action_config.api_url
+    inreach_api_url = action_config.api_url
     inreach_username = action_config.username
     inreach_password = action_config.password.get_secret_value()
     try:
@@ -57,7 +57,7 @@ async def action_push_messages(
         if not auth_config:
             raise ValueError("Authentication configuration is required for sending messages.")
         parsed_auth_config = AuthenticateConfig.parse_obj(auth_config.data)
-        inreach_api_url = integration.base_url or parsed_auth_config.api_url
+        inreach_api_url = parsed_auth_config.api_url
         inreach_username = parsed_auth_config.username
         inreach_password = parsed_auth_config.password.get_secret_value()
         with tracing.tracer.start_as_current_span(
