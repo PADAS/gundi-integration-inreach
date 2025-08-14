@@ -38,9 +38,10 @@ async def action_auth(integration: Integration, action_config: AuthenticateConfi
 
 @activity_logger()
 async def action_push_messages(
-        integration: Integration, action_config: PushMessageConfig, data: MessageTransformedInReach
+        integration: Integration, action_config: PushMessageConfig, data: MessageTransformedInReach, metadata: dict
 ):
     # Trace messages with Open Telemetry
+    tracing.pubsub_instrumentation.load_context_from_attributes(metadata)
     with tracing.tracer.start_as_current_span(
             "inreach_connector.action_push_messages", kind=SpanKind.CLIENT
     ) as current_span:
