@@ -3,7 +3,7 @@ import logging
 import traceback
 from datetime import datetime
 
-from gundi_core.schemas.v2 import Integration
+from gundi_core.schemas.v2 import Integration, LogLevel
 from gundi_core.events.transformers import MessageTransformedInReach
 
 from app.services.activity_logger import activity_logger, log_action_activity
@@ -87,7 +87,7 @@ async def action_push_messages(
                     integration_id=str(integration.id),
                     action_id="push_messages",
                     title=error_title,
-                    level=logging.ERROR,
+                    level=LogLevel.ERROR,
                     data={
                         "error": error,
                         "error_traceback": traceback.format_exc(),
@@ -106,7 +106,7 @@ async def action_push_messages(
                     integration_id=str(integration.id),
                     action_id="push_messages",
                     title=f"Message {gundi_id} Delivered to '{inreach_api_url}'",
-                    level=logging.INFO,
+                    level=LogLevel.DEBUG,
                     data={
                         "delivered_at": datetime.now().isoformat(),
                         **metadata,
