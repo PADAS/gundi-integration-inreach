@@ -4,6 +4,11 @@ from app.services.utils import GlobalUISchemaOptions
 
 
 class AuthenticateConfig(AuthActionConfiguration, ExecutableActionMixin):
+    api_url: str = Field(
+        default="https://explore.garmin.com",
+        title="API URL",
+        description="Base URL for inReach API"
+    )
     username: str = Field(
         ...,
         title="Username",
@@ -18,6 +23,7 @@ class AuthenticateConfig(AuthActionConfiguration, ExecutableActionMixin):
 
     ui_global_options: GlobalUISchemaOptions = GlobalUISchemaOptions(
         order=[
+            "inreach_api_url",
             "username",
             "password",
         ],

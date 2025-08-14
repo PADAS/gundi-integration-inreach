@@ -13,17 +13,18 @@ from .inreach_client import InReachClient, InReachAuthenticationError
 
 
 logger = logging.getLogger(__name__)
-inreach_client = InReachClient(api_url=settings.INREACH_API_URL)
 
 
 async def action_auth(integration: Integration, action_config: AuthenticateConfig):
+    inreach_api_url = integration.base_url or action_config.api_url
     inreach_username = action_config.username
     inreach_password = action_config.password.get_secret_value()
     try:
-        await inreach_client.pingback(
-            username=inreach_username,
-            password=inreach_password,
-        )
+        async with InReachClient(api_url=inreach_api_url) as inreach_client:
+            await inreach_client.pingback(
+                username=inreach_username,
+                password=inreach_password,
+            )
     except InReachAuthenticationError as e:
         return {"valid_credentials": False, "error": str(e)}
     except Exception as e:
@@ -56,17 +57,19 @@ async def action_push_messages(
         if not auth_config:
             raise ValueError("Authentication configuration is required for sending messages.")
         parsed_auth_config = AuthenticateConfig.parse_obj(auth_config.data)
+        inreach_api_url = integration.base_url or parsed_auth_config.api_url
         inreach_username = parsed_auth_config.username
         inreach_password = parsed_auth_config.password.get_secret_value()
         with tracing.tracer.start_as_current_span(
                 "inreach_connector.inreach_client.send_messages", kind=SpanKind.CLIENT
         ) as sub_span:
             try:
-                inreach_response = await inreach_client.send_messages(
-                    ipc_messages=[ipc_message],
-                    username=inreach_username,
-                    password=inreach_password,
-                )
+                async with InReachClient(api_url=inreach_api_url) as inreach_client:
+                    inreach_response = await inreach_client.send_messages(
+                        ipc_messages=[ipc_message],
+                        username=inreach_username,
+                        password=inreach_password,
+                    )
             except Exception as e:
                 error = f"{type(e).__name__}: {e}"
                 error_msg = f"Error dispatching message: {error}"
