@@ -23,7 +23,7 @@ class AuthenticateConfig(AuthActionConfiguration, ExecutableActionMixin):
 
     ui_global_options: GlobalUISchemaOptions = GlobalUISchemaOptions(
         order=[
-            "inreach_api_url",
+            "api_url",
             "username",
             "password",
         ],
