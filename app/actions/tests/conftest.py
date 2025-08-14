@@ -38,28 +38,32 @@ def inreach_integration():
                     "action_schema": {
                         "type": "object",
                         "title": "AuthenticateConfig",
+                        "required": ["api_url", "username", "password"],
                         "properties": {
+                            "api_url": {
+                                "type": "string",
+                                "title": "inReach Portal Connect (IPC) Inbound API",
+                                "description": "Base URL for inReach Inbound API"
+                            },
                             "password": {
                                 "type": "string",
                                 "title": "Password",
                                 "format": "password",
-                                "default": '',
-                                "example": "yourpassword",
                                 "writeOnly": True,
-                                "description": "Password used to authenticate against inReach API"
+                                "description": "Password for inReach account"
                             },
                             "username": {
                                 "type": "string",
                                 "title": "Username",
-                                "default": '',
-                                "example": "youruser",
-                                "description": "Username used to authenticate against inReach API"
+                                "description": "Username for inReach account"
                             }
                         },
                         "definitions": {},
                         "is_executable": True
                     },
-                    "ui_schema": {}
+                    "ui_schema": {
+                        "ui:order": ["api_url", "username", "password"]
+                    }
                 }, {
                     "id": "55a8cc58-68cc-4bfd-a1b7-402a0f484369",
                     "type": "push",
@@ -70,12 +74,36 @@ def inreach_integration():
                         "type": "object",
                         "title": "PushMessageConfig",
                         "properties": {},
-                        "definitions": {},
-                        "is_executable": False
+                        "definitions": {}
                     },
                     "ui_schema": {}
                 }],
-                "webhook": None
+                "webhook": {
+                    "id": "c091520b-c8c4-4c55-b4ab-1467f0ded0f3",
+                    "name": "Inreach Webhook",
+                    "value": "inreach_webhook",
+                    "description": "Webhook Integration with Inreach",
+                    "webhook_schema": {
+                        "type": "object",
+                        "title": "InReachWebhookConfig",
+                        "properties": {
+                            "include_messages": {
+                                "type": "boolean",
+                                "title": "Include Messages",
+                                "default": True
+                            },
+                            "include_observations": {
+                                "type": "boolean",
+                                "title": "Include Observations",
+                                "default": True
+                            }
+                        },
+                        "definitions": {}
+                    },
+                    "ui_schema": {
+                        "ui:order": ["include_messages", "include_observations"]
+                    }
+                }
             },
             "base_url": '',
             "enabled": True,
@@ -94,6 +122,7 @@ def inreach_integration():
                     "value": "auth"
                 },
                 "data": {
+                    "api_url": "https://explore.garmin.com",
                     "password": "test",
                     "username": "test"
                 }
@@ -108,7 +137,19 @@ def inreach_integration():
                 },
                 "data": {}
             }],
-            "webhook_configuration": None,
+            "webhook_configuration": {
+                "id": "2a102791-e85c-4e61-a859-3e1585d2f79b",
+                "integration": "5328877d-2a65-4654-bc18-5b5a406803f8",
+                "webhook": {
+                    "id": "c091520b-c8c4-4c55-b4ab-1467f0ded0f3",
+                    "name": "Inreach Webhook",
+                    "value": "inreach_webhook"
+                },
+                "data": {
+                    "include_messages": True,
+                    "include_observations": True
+                }
+            },
             "default_route": None,
             "additional": {},
             "status": "healthy",
@@ -163,7 +204,14 @@ def mock_inreach_client(mocker):
     mock_inreach_client.send_messages = AsyncMock(
         return_value={"status": "success", "inreach_response": {"Detail": "Message sent successfully."}}
     )
+    mock_inreach_client.__aenter__.return_value = mock_inreach_client
     return mock_inreach_client
+
+@pytest.fixture
+def mock_inreach_client_class(mocker, mock_inreach_client):
+    mock_inreach_client_class = mocker.MagicMock()
+    mock_inreach_client_class.return_value = mock_inreach_client
+    return mock_inreach_client_class
 
 
 @pytest.fixture
@@ -180,4 +228,21 @@ def mock_push_messages_data():
             "Timestamp": "2025-06-04 13:35:10+03:00"
         },
         "event_type": "MessageTransformedInReach"
+    }
+
+
+@pytest.fixture
+def mock_push_messages_metadata(inreach_integration):
+    return {
+        "gundi_version": "v2",
+        "provider_key": "awt",
+        "gundi_id": "23ca4b15-18b6-4cf4-9da6-36dd69c6f638",
+        "related_to": "None",
+        "stream_type": "txt",
+        "source_id": "afa0d606-c143-4705-955d-68133645db6d",
+        "external_source_id": "Xyz123",
+        "destination_id": str(inreach_integration.id),
+        "data_provider_id": "ddd0946d-15b0-4308-b93d-e0470b6d33b6",
+        "annotations": "{}",
+        "tracing_context": "{}"
     }
