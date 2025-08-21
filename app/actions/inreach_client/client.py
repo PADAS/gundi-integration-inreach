@@ -116,7 +116,10 @@ class InReachClient:
         """
         Send messages to the InReach service.
         """
-        messages = [json.loads(msg.json()) for msg in ipc_messages]
+        messages = [
+            json.loads(msg.json())  # Custom serialization of datetime fields to "/Date(<milliseconds>)/ format"
+            for msg in ipc_messages
+        ]
         return await self._call_api(
             endpoint="IPCInbound/V1/Messaging.svc/Message",
             method="POST",
