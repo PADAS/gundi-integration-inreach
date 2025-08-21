@@ -116,7 +116,7 @@ class InReachClient:
         """
         Send messages to the InReach service.
         """
-        messages = [msg.dict() for msg in ipc_messages]
+        messages = [json.loads(msg.json()) for msg in ipc_messages]
         return await self._call_api(
             endpoint="IPCInbound/V1/Messaging.svc/Message",
             method="POST",
