@@ -22,6 +22,8 @@ async def action_auth(integration: Integration, action_config: AuthenticateConfi
     inreach_api_url = action_config.api_url
     inreach_username = action_config.username
     inreach_password = action_config.password.get_secret_value()
+    if not inreach_api_url or not inreach_username or not inreach_password:
+        return {"valid_credentials": False, "error": "URL, username, and password are required for authentication."}
     try:
         async with InReachClient(api_url=inreach_api_url) as inreach_client:
             await inreach_client.pingback(
