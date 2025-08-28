@@ -64,7 +64,7 @@ async def webhook_handler(payload: InReachWebhookPayload, integration=None, webh
             if inreach_event.messageCode == MessageCodeEnum.free_text_message:
                 messages.append(build_message_from_inreach_event(inreach_event))
             else:
-                logger.debug(f"Skipping text message extraction from InReach event with code {inreach_event.messageCode}:{inreach_event.dict()}")
+                logger.info(f"Skipping text message extraction from InReach event with code {inreach_event.messageCode}:{inreach_event.dict()}")
         if webhook_config.include_observations:
             observations.append(build_observation_from_inreach_event(inreach_event))
     # Send the final data to gundi
