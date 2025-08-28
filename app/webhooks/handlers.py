@@ -1,7 +1,7 @@
 from app.services.activity_logger import webhook_activity_logger
 from app.services.gundi import send_observations_to_gundi, _get_gundi_api_key, send_messages_to_gundi
 from .configurations import InReachWebhookPayload, InReachWebhookConfig
-from .inreach import InreachEvent
+from .inreach import InreachEvent, MessageCodeEnum
 
 
 def build_message_from_inreach_event(inreach_event: InreachEvent):
@@ -55,6 +55,9 @@ async def webhook_handler(payload: InReachWebhookPayload, integration=None, webh
     messages = []
     # Extract observations and messages
     for inreach_event in payload.Events:
+        # Filter by message code
+        if inreach_event.messageCode != MessageCodeEnum.free_text_message:
+            continue
         if webhook_config.include_messages:
             messages.append(build_message_from_inreach_event(inreach_event))
         if webhook_config.include_observations:
