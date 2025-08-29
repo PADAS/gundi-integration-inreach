@@ -70,6 +70,8 @@ async def webhook_handler(payload: InReachWebhookPayload, integration=None, webh
     # Send the final data to gundi
     integration_id = str(integration.id)
     # Observations sent first so that subjects and sources are created
-    await send_observations_to_gundi(observations=observations, integration_id=integration_id)
-    await send_messages_to_gundi(messages=messages, integration_id=integration_id)
+    if observations:
+        await send_observations_to_gundi(observations=observations, integration_id=integration_id)
+    if messages:
+        await send_messages_to_gundi(messages=messages, integration_id=integration_id)
     return {"total_observations": len(observations), "total_messages": len(messages)}
