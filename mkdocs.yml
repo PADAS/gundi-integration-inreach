@@ -1,0 +1,44 @@
+site_name: Gundi Garmin inReach Integration
+site_description: Technical documentation for the Garmin inReach connector for Gundi v2
+site_url: https://padas.github.io/gundi-integration-inreach/
+repo_url: https://github.com/PADAS/gundi-integration-inreach
+repo_name: PADAS/gundi-integration-inreach
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - toc.integrate
+
+nav:
+  - Overview: index.md
+  - How It Works: how-it-works.md
+  - Configuration: configuration.md
+  - Garmin Accounts & Flex Plans: garmin-accounts.md
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
