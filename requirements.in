@@ -7,3 +7,4 @@ opentelemetry-exporter-otlp-proto-http==1.14.0
 opentelemetry-instrumentation-requests==0.35b0
 opentelemetry-instrumentation-aiohttp-client==0.35b0
 opentelemetry-instrumentation-httpx==0.35b0
+respx~=0.22.0  # the tests mock httpx with it; gundi-client-v2 3.x no longer brings it transitively
