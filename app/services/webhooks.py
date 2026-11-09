@@ -5,6 +5,7 @@ import logging
 from urllib.parse import urlparse
 import httpx
 from fastapi import Request
+from fastapi.responses import JSONResponse
 from app import settings
 from app.services.activity_logger import log_activity, publish_event
 from gundi_client_v2 import GundiClient
@@ -13,6 +14,7 @@ from app.services.utils import DyntamicFactory
 from app.webhooks.core import get_webhook_handler, DynamicSchemaConfig, HexStringConfig, GenericJsonPayload
 from app.services.config_manager import IntegrationConfigurationManager
 from app.services.url_policy import validate_outbound_url
+from app.services.retry_policies import is_retryable_failure
 
 config_manager = IntegrationConfigurationManager()
 logger = logging.getLogger(__name__)
@@ -253,5 +255,21 @@ async def process_webhook(request: Request):
             ),
             topic_name=settings.INTEGRATION_EVENTS_TOPIC,
         )
+        if is_retryable_failure(e):
+            # Webhook data arrives once, so the sender's retry is the only
+            # second chance it gets. Senders such as Garmin's IPC Outbound
+            # treat anything but a 200 as a failed delivery and retry it with
+            # back-off (2, 4, 8 ... 128 s, queued for up to five days), so a
+            # transient failure is answered with 503. Permanent ones (a 4xx
+            # from Gundi, an unparseable payload) stay acknowledged above:
+            # retrying them would loop for five days and then pause the feed.
+            # Only reaches the sender when the route awaits process_webhook
+            # (PROCESS_WEBHOOKS_IN_BACKGROUND=False); a background task's
+            # return value is discarded after the 200 has already gone out.
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Temporary failure forwarding the payload to Gundi. Please retry."},
+                headers={"Retry-After": "30"},
+            )
     return {}
 
