@@ -41,18 +41,35 @@ ephemeral_run: contextvars.ContextVar[bool] = contextvars.ContextVar(
 )
 
 
-# Publish events for other services or system components
-@stamina.retry(
+# Per-request budget for one publish to PubSub (connect + TLS + response).
+PUBLISH_REQUEST_TIMEOUT_SECONDS = 20.0
+
+# Retry policy for publishing system events. Both stops are explicit: stamina
+# combines `attempts` and `timeout` with stop_any() and defaults the timeout
+# to 45 s, so the previous five-attempt declaration (4-9 / 8-13 / 16-21 /
+# 32-37 s waits on top of 20 s requests) was cut off after two or three
+# attempts in production. Sized so every declared attempt is reachable:
+# worst-case waits 5 + 7 = 12 s plus two 20 s requests before the last
+# attempt fit inside the 60 s budget. Activity events are a side channel
+# (see webhook_activity_logger), so the whole policy stays short enough not
+# to hold a webhook request for minutes when PubSub is slow; the tests in
+# test_activity_logger.py pin the bound.
+PUBLISH_EVENT_RETRY = dict(
     on=(aiohttp.ClientError, asyncio.TimeoutError),
-    attempts=5,
-    wait_initial=4.0,
-    wait_max=60,
-    wait_jitter=5.0
+    attempts=3,
+    timeout=60.0,
+    wait_initial=2.0,
+    wait_jitter=3.0,
+    wait_max=7.0,
 )
+
+
+# Publish events for other services or system components
+@stamina.retry(**PUBLISH_EVENT_RETRY)
 async def publish_event(event: SystemEventBaseModel, topic_name: str):
     if ephemeral_run.get():
         return None
-    timeout_settings = aiohttp.ClientTimeout(total=20.0)
+    timeout_settings = aiohttp.ClientTimeout(total=PUBLISH_REQUEST_TIMEOUT_SECONDS)
     async with aiohttp.ClientSession(
         raise_for_status=True, timeout=timeout_settings
     ) as session:
@@ -190,6 +207,27 @@ def activity_logger(on_start=True, on_completion=True, on_error=True):
     return decorator
 
 
+async def _publish_event_or_log(event: SystemEventBaseModel, topic_name: str):
+    """Publish an activity event, logging instead of raising when PubSub is
+    unreachable.
+
+    Webhook data arrives once: the sender has usually been answered already
+    and will not resend, so the activity log is a side channel that must never
+    decide whether the payload is forwarded. Before this guard, a 'started'
+    publish timing out aborted the handler before any data was sent, and a
+    'complete' publish timing out reported a failure for data that had
+    already been delivered (both observed in prod on 2026-11-09).
+    """
+    try:
+        return await publish_event(event=event, topic_name=topic_name)
+    except Exception as e:
+        logger.warning(
+            f"Could not publish {type(event).__name__} to topic {topic_name}: "
+            f"{type(e).__name__}: {e}. Continuing without it."
+        )
+        return None
+
+
 def webhook_activity_logger(on_start=True, on_completion=True, on_error=True):
     def decorator(func):
         @wraps(func)
@@ -200,7 +238,7 @@ def webhook_activity_logger(on_start=True, on_completion=True, on_error=True):
             config_data = webhook_config.dict() if webhook_config else {} or {}
             webhook_id = str(integration.webhook_configuration.webhook.value) if integration and integration.webhook_configuration else "webhook"
             if on_start:
-                await publish_event(
+                await _publish_event_or_log(
                     event=IntegrationWebhookStarted(
                         payload=WebhookExecutionStarted(
                             integration_id=integration_id,
@@ -214,7 +252,7 @@ def webhook_activity_logger(on_start=True, on_completion=True, on_error=True):
                 result = await func(*args, **kwargs)
             except Exception as e:
                 if on_error:
-                    await publish_event(
+                    await _publish_event_or_log(
                         event=IntegrationWebhookFailed(
                             payload=WebhookExecutionFailed(
                                 integration_id=integration_id,
@@ -228,7 +266,7 @@ def webhook_activity_logger(on_start=True, on_completion=True, on_error=True):
                 raise
             else:
                 if on_completion:
-                    await publish_event(
+                    await _publish_event_or_log(
                         event=IntegrationWebhookComplete(
                             payload=WebhookExecutionComplete(
                                 integration_id=integration_id,
