@@ -14,7 +14,7 @@ from app.services.utils import DyntamicFactory
 from app.webhooks.core import get_webhook_handler, DynamicSchemaConfig, HexStringConfig, GenericJsonPayload
 from app.services.config_manager import IntegrationConfigurationManager
 from app.services.url_policy import validate_outbound_url
-from app.services.retry_policies import is_transient_error
+from app.services.retry_policies import is_retryable_failure
 
 config_manager = IntegrationConfigurationManager()
 logger = logging.getLogger(__name__)
@@ -255,7 +255,7 @@ async def process_webhook(request: Request):
             ),
             topic_name=settings.INTEGRATION_EVENTS_TOPIC,
         )
-        if is_transient_error(e):
+        if is_retryable_failure(e):
             # Webhook data arrives once, so the sender's retry is the only
             # second chance it gets. Senders such as Garmin's IPC Outbound
             # treat anything but a 200 as a failed delivery and retry it with
