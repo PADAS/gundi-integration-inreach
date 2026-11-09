@@ -15,7 +15,7 @@ import httpx
 from gundi_client_v2.errors import AuthenticationError, GundiAPIError
 from redis.exceptions import RedisError
 
-from .errors import source_status_code
+from .errors import source_status_code, CONNECTIVITY_EXCEPTIONS
 
 REDIS_RETRY = dict(on=RedisError, attempts=5, wait_initial=1.0, wait_max=30, wait_jitter=3.0)
 
@@ -51,3 +51,12 @@ def is_transient_gundi_error(exc: BaseException) -> bool:
         # An httpx error without a status is a transport failure.
         return True if status_code is None else _retryable_status(status_code)
     return False
+
+
+def is_transient_error(exc: BaseException) -> bool:
+    """Whether a failure is worth another attempt, by us or by whoever sent
+    the data: the provider or Gundi could not be reached, or Gundi answered
+    429 / 5xx. A definite rejection (a 4xx, bad credentials, a payload the
+    handler cannot parse) is not, and asking for a retry would only repeat
+    it. Used by process_webhook to decide between 503 and 200."""
+    return isinstance(exc, CONNECTIVITY_EXCEPTIONS) or is_transient_gundi_error(exc)
