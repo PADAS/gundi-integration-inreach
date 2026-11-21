@@ -151,3 +151,11 @@ async def test_webhook_handler_processes_inreach_event_success(
         assert send_messages_call.kwargs["integration_id"] == str(inreach_integration_with_webhook.id)
         expected_messages = [build_message_from_inreach_event(event) for event in inreach_webhook_request_payload.Events]
         assert send_messages_call.kwargs["messages"] == expected_messages
+
+
+def test_webhook_ui_order_covers_every_config_field():
+    """react-jsonschema-form throws when ui:order leaves out a property unless
+    the list has a "*" wildcard; the portal form would not render."""
+    order = InReachWebhookConfig.ui_schema()["ui:order"]
+    properties = InReachWebhookConfig.schema()["properties"]
+    assert "*" in order or set(properties) <= set(order)
