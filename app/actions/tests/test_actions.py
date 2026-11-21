@@ -199,3 +199,13 @@ async def test_execute_push_messages_with_inreach_error(
     assert logged_data.get("error_traceback")
     for key, value in mock_push_messages_metadata.items():
         assert logged_data.get(key) == value
+
+
+def test_auth_config_ui_schema_declares_the_form_heading():
+    from app.actions.configurations import AuthenticateConfig
+
+    assert AuthenticateConfig.ui_schema() == {
+        "ui:order": ["api_url", "username", "password"],
+        "ui:title": "Connection Credentials",
+        "ui:description": "Enter your credentials to authenticate.",
+    }

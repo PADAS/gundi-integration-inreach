@@ -29,6 +29,16 @@ class AuthenticateConfig(AuthActionConfiguration, ExecutableActionMixin):
         ],
     )
 
+    @classmethod
+    def ui_schema(cls, *args, **kwargs):
+        # The heading the portal shows above the auth form. GlobalUISchemaOptions
+        # has no title or description, so add them to the generated ui schema.
+        return {
+            **super().ui_schema(*args, **kwargs),
+            "ui:title": "Connection Credentials",
+            "ui:description": "Enter your credentials to authenticate.",
+        }
+
 
 class PushMessageConfig(PushActionConfiguration):
     pass
