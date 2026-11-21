@@ -26,5 +26,9 @@ class InReachWebhookConfig(WebhookConfiguration):
             "include_messages",
             "include_observations",
             "append_recipients_to_message",
+            # react-jsonschema-form refuses to render a form whose ui:order omits a
+            # property, so let inherited fields (diagnostic_destination_url, and
+            # whatever the template adds next) follow the ones ordered here.
+            "*",
         ],
     )
