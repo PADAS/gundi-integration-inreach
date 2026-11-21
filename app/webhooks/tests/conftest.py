@@ -104,12 +104,17 @@ def inreach_integration_with_webhook():
                                 "type": "boolean",
                                 "title": "Include Observations",
                                 "default": True
+                            },
+                            "append_recipients_to_message": {
+                                "type": "boolean",
+                                "title": "Append Recipients To Message",
+                                "default": False
                             }
                         },
                         "definitions": {}
                     },
                     "ui_schema": {
-                        "ui:order": ["include_messages", "include_observations"]
+                        "ui:order": ["include_messages", "include_observations", "append_recipients_to_message"]
                     }
                 }
             },
