@@ -71,7 +71,7 @@ Each observation sent to Gundi contains:
 
 ### Message format
 
-Free-text events become Gundi messages with `sender` = IMEI, `text` = the free text, the event location, and `additional` metadata (message code, status flags, and the recipient addresses Garmin reported).
+Free-text events become Gundi messages with `sender` = IMEI, `text` = the free text, the event location, and `additional` metadata (message code, status flags, and the recipient addresses Garmin reported). When `append_recipients_to_message` is on, those addresses are also appended to the text as ` (to: a, b)`.
 
 ### Supported message codes
 

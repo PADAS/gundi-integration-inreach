@@ -9,14 +9,19 @@ from .inreach import InreachEvent, MessageCodeEnum
 logger = logging.getLogger(__name__)
 
 
-def build_message_from_inreach_event(inreach_event: InreachEvent):
+def build_message_from_inreach_event(inreach_event: InreachEvent, append_recipients: bool = False):
     location_data = inreach_event.point.dict()
     latitude = location_data.pop("latitude")
     longitude = location_data.pop("longitude")
+    text = inreach_event.freeText
+    if append_recipients and inreach_event.addresses:
+        # Same format as the legacy cdip-api bridge, so messages read the same after migration
+        recipients = ", ".join(item.address for item in inreach_event.addresses)
+        text = f"{text} (to: {recipients})" if text else f"(to: {recipients})"
     return {
         "sender": inreach_event.imei,
         "recipients": [],
-        "text": inreach_event.freeText,
+        "text": text,
         "recorded_at": inreach_event.timeStamp,
         "location": {
             "latitude": latitude,
@@ -62,7 +67,10 @@ async def webhook_handler(payload: InReachWebhookPayload, integration=None, webh
     for inreach_event in payload.Events:
         if webhook_config.include_messages:
             if inreach_event.messageCode == MessageCodeEnum.free_text_message:
-                messages.append(build_message_from_inreach_event(inreach_event))
+                messages.append(build_message_from_inreach_event(
+                    inreach_event,
+                    append_recipients=webhook_config.append_recipients_to_message,
+                ))
             else:
                 logger.info(f"Skipping text message extraction from InReach event with code {inreach_event.messageCode}:{inreach_event.dict()}")
         if webhook_config.include_observations:

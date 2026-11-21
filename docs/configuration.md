@@ -29,6 +29,7 @@ Controls what the connector extracts from IPC Outbound events (`app/webhooks/con
 |-------|---------|-------------|
 | `include_messages` | `true` | Extract free-text events (`messageCode = 3`) as two-way messages |
 | `include_observations` | `true` | Extract every event as a location observation |
+| `append_recipients_to_message` | `false` | Add the addresses a device message was sent to at the end of the message text, e.g. `On my way. (to: ranger@example.org, 2075550100)`. Same behavior as the legacy bridge option of the same name |
 
 ### Push messages (`push_messages` action)
 
