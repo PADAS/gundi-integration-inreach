@@ -1,0 +1,4 @@
+# Add your integration-specific test-only dependencies here (respx, freezegun, ...).
+# They compile into requirements-dev.txt with requirements-dev.in, so they reach CI and
+# the devimage stage but never the production image. Runtime deps go in requirements.in.
+respx~=0.22.0  # the tests mock httpx with it; gundi-client-v2 3.x no longer brings it transitively
