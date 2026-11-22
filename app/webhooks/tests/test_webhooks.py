@@ -80,6 +80,32 @@ async def test_webhook_handler_applies_append_recipients_setting(
     assert [m["text"] for m in sent_messages] == [expected_text]
 
 
+@pytest.mark.asyncio
+async def test_webhook_handler_appends_recipients_with_default_config(
+        mocker,
+        mock_send_observations_to_gundi,
+        mock_send_messages_to_gundi,
+        mock_publish_event,
+        inreach_integration_with_webhook,
+        inreach_webhook_request_payload,
+):
+    """An integration that never saved the setting gets the recipients in the text."""
+    mocker.patch("app.services.activity_logger.publish_event", mock_publish_event)
+    mocker.patch("app.webhooks.handlers.send_observations_to_gundi", mock_send_observations_to_gundi)
+    mocker.patch("app.webhooks.handlers.send_messages_to_gundi", mock_send_messages_to_gundi)
+
+    await webhook_handler(
+        payload=inreach_webhook_request_payload,
+        integration=inreach_integration_with_webhook,
+        webhook_config=InReachWebhookConfig()
+    )
+
+    sent_messages = mock_send_messages_to_gundi.mock_calls[0].kwargs["messages"]
+    assert [m["text"] for m in sent_messages] == [
+        "On my way. (to: 2075752244, product.support@garmin.com)"
+    ]
+
+
 # Test data transformations
 def test_build_observation_from_inreach_event(inreach_event):
     observation = build_observation_from_inreach_event(inreach_event)
