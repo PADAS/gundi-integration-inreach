@@ -114,7 +114,7 @@ def inreach_integration_with_webhook():
                         "definitions": {}
                     },
                     "ui_schema": {
-                        "ui:order": ["include_messages", "include_observations", "append_recipients_to_message"]
+                        "ui:order": ["include_messages", "include_observations", "append_recipients_to_message", "*"]
                     }
                 }
             },

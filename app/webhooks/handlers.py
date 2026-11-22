@@ -9,7 +9,7 @@ from .inreach import InreachEvent, MessageCodeEnum
 logger = logging.getLogger(__name__)
 
 
-def build_message_from_inreach_event(inreach_event: InreachEvent, append_recipients: bool = False):
+def build_message_from_inreach_event(inreach_event: InreachEvent, *, append_recipients: bool):
     location_data = inreach_event.point.dict()
     latitude = location_data.pop("latitude")
     longitude = location_data.pop("longitude")

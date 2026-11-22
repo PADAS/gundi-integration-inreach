@@ -7,7 +7,7 @@ from app.webhooks.handlers import webhook_handler, build_observation_from_inreac
 
 # Test data transformations
 def test_build_message_from_inreach_event(inreach_event):
-    message = build_message_from_inreach_event(inreach_event)
+    message = build_message_from_inreach_event(inreach_event, append_recipients=False)
     assert message.get("sender") == inreach_event.imei
     assert message.get("text") == inreach_event.freeText
     assert message.get("recorded_at") == inreach_event.timeStamp
@@ -39,8 +39,8 @@ def test_build_message_leaves_text_alone_when_there_are_no_recipients(inreach_ev
     assert message["text"] == "On my way."
 
 
-def test_build_message_leaves_text_alone_when_not_asked_to_append(inreach_event):
-    message = build_message_from_inreach_event(inreach_event)
+def test_build_message_leaves_text_alone_when_append_is_off(inreach_event):
+    message = build_message_from_inreach_event(inreach_event, append_recipients=False)
     assert message["text"] == "On my way."
 
 
