@@ -7,7 +7,7 @@ from app.webhooks.handlers import webhook_handler, build_observation_from_inreac
 
 # Test data transformations
 def test_build_message_from_inreach_event(inreach_event):
-    message = build_message_from_inreach_event(inreach_event)
+    message = build_message_from_inreach_event(inreach_event, append_recipients=False)
     assert message.get("sender") == inreach_event.imei
     assert message.get("text") == inreach_event.freeText
     assert message.get("recorded_at") == inreach_event.timeStamp
@@ -39,10 +39,13 @@ def test_build_message_leaves_text_alone_when_there_are_no_recipients(inreach_ev
     assert message["text"] == "On my way."
 
 
-def test_build_message_does_not_append_recipients_by_default(inreach_event):
-    assert InReachWebhookConfig().append_recipients_to_message is False
-    message = build_message_from_inreach_event(inreach_event)
+def test_build_message_leaves_text_alone_when_append_is_off(inreach_event):
+    message = build_message_from_inreach_event(inreach_event, append_recipients=False)
     assert message["text"] == "On my way."
+
+
+def test_webhook_config_appends_recipients_by_default():
+    assert InReachWebhookConfig().append_recipients_to_message is True
 
 
 @pytest.mark.parametrize(
@@ -75,6 +78,32 @@ async def test_webhook_handler_applies_append_recipients_setting(
 
     sent_messages = mock_send_messages_to_gundi.mock_calls[0].kwargs["messages"]
     assert [m["text"] for m in sent_messages] == [expected_text]
+
+
+@pytest.mark.asyncio
+async def test_webhook_handler_appends_recipients_with_default_config(
+        mocker,
+        mock_send_observations_to_gundi,
+        mock_send_messages_to_gundi,
+        mock_publish_event,
+        inreach_integration_with_webhook,
+        inreach_webhook_request_payload,
+):
+    """An integration that never saved the setting gets the recipients in the text."""
+    mocker.patch("app.services.activity_logger.publish_event", mock_publish_event)
+    mocker.patch("app.webhooks.handlers.send_observations_to_gundi", mock_send_observations_to_gundi)
+    mocker.patch("app.webhooks.handlers.send_messages_to_gundi", mock_send_messages_to_gundi)
+
+    await webhook_handler(
+        payload=inreach_webhook_request_payload,
+        integration=inreach_integration_with_webhook,
+        webhook_config=InReachWebhookConfig()
+    )
+
+    sent_messages = mock_send_messages_to_gundi.mock_calls[0].kwargs["messages"]
+    assert [m["text"] for m in sent_messages] == [
+        "On my way. (to: 2075752244, product.support@garmin.com)"
+    ]
 
 
 # Test data transformations
@@ -122,10 +151,11 @@ async def test_webhook_handler_processes_inreach_event_success(
     mocker.patch("app.webhooks.handlers.send_observations_to_gundi", mock_send_observations_to_gundi)
     mocker.patch("app.webhooks.handlers.send_messages_to_gundi", mock_send_messages_to_gundi)
 
+    webhook_config = InReachWebhookConfig(**processing_settings)
     result = await webhook_handler(
         payload=inreach_webhook_request_payload,
         integration=inreach_integration_with_webhook,
-        webhook_config=InReachWebhookConfig(**processing_settings)
+        webhook_config=webhook_config
     )
 
     if processing_settings.get("include_messages"):
@@ -149,7 +179,12 @@ async def test_webhook_handler_processes_inreach_event_success(
         assert mock_send_messages_to_gundi.call_count == 1
         send_messages_call = mock_send_messages_to_gundi.mock_calls[0]
         assert send_messages_call.kwargs["integration_id"] == str(inreach_integration_with_webhook.id)
-        expected_messages = [build_message_from_inreach_event(event) for event in inreach_webhook_request_payload.Events]
+        expected_messages = [
+            build_message_from_inreach_event(
+                event, append_recipients=webhook_config.append_recipients_to_message
+            )
+            for event in inreach_webhook_request_payload.Events
+        ]
         assert send_messages_call.kwargs["messages"] == expected_messages
 
 
