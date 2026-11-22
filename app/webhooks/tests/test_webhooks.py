@@ -39,10 +39,13 @@ def test_build_message_leaves_text_alone_when_there_are_no_recipients(inreach_ev
     assert message["text"] == "On my way."
 
 
-def test_build_message_does_not_append_recipients_by_default(inreach_event):
-    assert InReachWebhookConfig().append_recipients_to_message is False
+def test_build_message_leaves_text_alone_when_not_asked_to_append(inreach_event):
     message = build_message_from_inreach_event(inreach_event)
     assert message["text"] == "On my way."
+
+
+def test_webhook_config_appends_recipients_by_default():
+    assert InReachWebhookConfig().append_recipients_to_message is True
 
 
 @pytest.mark.parametrize(
@@ -122,10 +125,11 @@ async def test_webhook_handler_processes_inreach_event_success(
     mocker.patch("app.webhooks.handlers.send_observations_to_gundi", mock_send_observations_to_gundi)
     mocker.patch("app.webhooks.handlers.send_messages_to_gundi", mock_send_messages_to_gundi)
 
+    webhook_config = InReachWebhookConfig(**processing_settings)
     result = await webhook_handler(
         payload=inreach_webhook_request_payload,
         integration=inreach_integration_with_webhook,
-        webhook_config=InReachWebhookConfig(**processing_settings)
+        webhook_config=webhook_config
     )
 
     if processing_settings.get("include_messages"):
@@ -149,7 +153,12 @@ async def test_webhook_handler_processes_inreach_event_success(
         assert mock_send_messages_to_gundi.call_count == 1
         send_messages_call = mock_send_messages_to_gundi.mock_calls[0]
         assert send_messages_call.kwargs["integration_id"] == str(inreach_integration_with_webhook.id)
-        expected_messages = [build_message_from_inreach_event(event) for event in inreach_webhook_request_payload.Events]
+        expected_messages = [
+            build_message_from_inreach_event(
+                event, append_recipients=webhook_config.append_recipients_to_message
+            )
+            for event in inreach_webhook_request_payload.Events
+        ]
         assert send_messages_call.kwargs["messages"] == expected_messages
 
 

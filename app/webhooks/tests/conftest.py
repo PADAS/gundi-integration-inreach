@@ -108,7 +108,7 @@ def inreach_integration_with_webhook():
                             "append_recipients_to_message": {
                                 "type": "boolean",
                                 "title": "Append Recipients To Message",
-                                "default": False
+                                "default": True
                             }
                         },
                         "definitions": {}

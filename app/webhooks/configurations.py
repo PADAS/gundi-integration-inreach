@@ -13,7 +13,7 @@ class InReachWebhookConfig(WebhookConfiguration):
     include_observations: bool = True
     include_messages: bool = True
     append_recipients_to_message: bool = Field(
-        False,
+        True,
         title="Append Recipients To Message",
         description=(
             "When enabled, the addresses a device message was sent to are added to the end "
